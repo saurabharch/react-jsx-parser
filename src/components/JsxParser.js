@@ -59,7 +59,7 @@ export default class JsxParser extends React.Component {
 
     const wrappedJsx = hasDoctype(jsx) ? jsx : `<!DOCTYPE html>\n<html><body>${jsx}</body></html>`
 
-    const doc = parser.parseFromString(wrappedJsx, 'application/xhtml+xml')
+    const doc = parser.parseFromString(wrappedJsx, 'text/html')
 
     if (!doc) return []
 
@@ -114,8 +114,12 @@ export default class JsxParser extends React.Component {
         }
       }
 
+      if (node.nodeName.toLowerCase() === 'hello') {
+        console.log(node.nodeName, components)
+      }
+
       return React.createElement(
-        components[node.nodeName] || node.nodeName,
+        components[node.nodeName.toUpperCase()] || node.nodeName,
         {
           ...this.props.bindings || {},
           ...this.parseAttrs(node.attributes, key),

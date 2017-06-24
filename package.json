@@ -10,6 +10,7 @@
     "url": "git@github.com:TroyAlford/react-jsx-parser.git"
   },
   "dependencies": {
+    "prop-types": "^15.5.10",
     "react": "^15.4.2"
   },
   "devDependencies": {
