@@ -7,7 +7,18 @@ import ATTRIBUTES from '../constants/attributeNames'
 import NODE_TYPES from '../constants/nodeTypes'
 import { canHaveChildren, canHaveWhitespace } from '../constants/specialTags'
 
-const parser = new DOMParser()
+let parser = new DOMParser()
+// let LocalNodeList
+//
+// if (typeof DOMParser === 'undefined') {
+//   const xmldom = require('xmldom')
+//
+//   LocalNodeList = xmldom.NodeList
+//   parser = new xmldom.DOMParser()
+// } else {
+//   parser = new DOMParser()
+//   LocalNodeList = NodeList
+// }
 
 const warnParseErrors = (doc) => {
   const errors = Array.from(doc.documentElement.childNodes)
@@ -62,14 +73,7 @@ export default class JsxParser extends React.Component {
       return []
     }
 
-    const components = this.props.components.reduce(
-      (map, type) => ({
-        ...map,
-        [type.prototype.constructor.name]: type,
-      })
-    , {})
-
-    return this.parseNode(body.childNodes || [], components)
+    return this.parseNode(body.childNodes || [], this.props.components)
   }
   parseNode(node, components = {}, key) {
     if (node instanceof NodeList || Array.isArray(node)) {
@@ -80,9 +84,24 @@ export default class JsxParser extends React.Component {
 
     if (node.nodeType === NODE_TYPES.TEXT) {
       // Text node. Collapse whitespace and return it as a String.
-      return ('textContent' in node ? node.textContent : node.nodeValue || '')
-        .replace(/[\r\n\t\f\v]/g, '')
-        .replace(/\s{2,}/g, ' ')
+      const value = ('textContent' in node ? node.textContent : node.nodeValue || '')
+      // if (node.textContent) {
+      //   console.log('using textContent')
+      // } else if (node.nodeValue) {
+      //   console.log('using node value')
+      // }
+      // console.log(value, value.length)
+      // if (value === ' ') {
+      //   return React.createElement('span', {}, ' ')
+      // }
+      // if (/\n/g.test(value) && value.length > 2) {
+      //   console.log('THERE IS A FUCKING LINEBREAK')
+      //   global['node'] = node
+      //   debugger
+      // }
+      return React.createElement('span', {}, value)
+        // .replace(/[\r\n\t\f\v]/g, '')
+        // .replace(/\s{2,}/g, ' ')
     } else if (node.nodeType === NODE_TYPES.ELEMENT) {
       // Element node. Parse its Attributes and Children, then call createElement
       let children
@@ -158,12 +177,13 @@ JsxParser.propTypes = {
   blacklistedAttrs: React.PropTypes.arrayOf(React.PropTypes.string),
   blacklistedTags:  React.PropTypes.arrayOf(React.PropTypes.string),
   components:       (props, propName) => {
-    if (!Array.isArray(props[propName])) {
-      return new Error(`${propName} must be an Array of Components.`)
-    }
+    // if (props[propName] && (Array.isArray(props[propName]) || typeof props[propName] !== 'object')) {
+    //   console.log(typeof props[propName])
+    //   return new Error(`${propName} must now be an object of Components.`)
+    // }
 
     let passes = true
-    props[propName].forEach((component) => {
+    Object.values(props[propName]).forEach((component) => {
       if (!(component.prototype instanceof React.Component ||
             component.prototype instanceof React.PureComponent ||
             typeof component === 'function'
